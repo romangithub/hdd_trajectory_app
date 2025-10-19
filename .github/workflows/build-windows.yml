@@ -5,12 +5,22 @@ on:
   push:
     branches: [ main ]
 
+env:
+  PROJECT_DIR: hdd_trajectory_app
+  EXE_NAME: HDD_Trajectory   # без пробелов — меньше боли с путями
+
 jobs:
   build-win:
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Print workspace layout
+        shell: pwsh
+        run: |
+          Write-Host "GITHUB_WORKSPACE = $env:GITHUB_WORKSPACE"
+          Get-ChildItem -Recurse
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -20,24 +30,33 @@ jobs:
       - name: Install deps
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          pip install -r hdd_trajectory_app/requirements.txt
+          python -m pip install --upgrade pip wheel
+          pip install -r "$env:PROJECT_DIR/requirements.txt"
           pip install pyinstaller
+
+      - name: Sanity check project contents
+        shell: pwsh
+        run: |
+          Get-ChildItem "$env:PROJECT_DIR" -Recurse
+          if (-not (Test-Path "$env:PROJECT_DIR/Home.py")) { throw "Home.py not found" }
+          if (-not (Test-Path "$env:PROJECT_DIR/app_launcher.py")) { throw "app_launcher.py not found" }
+          if (-not (Test-Path "$env:PROJECT_DIR/rthooks/set_cwd.py")) { throw "rthooks/set_cwd.py not found" }
 
       - name: Build EXE with PyInstaller
         shell: pwsh
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          cd hdd_trajectory_app
-          pyinstaller --noconsole --name "HDD Trajectory" app_launcher.py `
+          pyinstaller --clean --noconsole --name "$env:EXE_NAME" app_launcher.py `
             --add-data "Home.py;." `
             --add-data "pages;pages" `
             --add-data "modules;modules" `
             --add-data ".streamlit;.streamlit" `
             --runtime-hook rthooks\set_cwd.py
+          Write-Host "Built files:"
+          Get-ChildItem "dist" -Recurse
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hdd-trajectory-exe
-          path: |
-            hdd_trajectory_app/dist/HDD Trajectory/**
+          name: ${{ env.EXE_NAME }}-win
+          path: ${{ env.PROJECT_DIR }}/dist/**
