@@ -19,22 +19,24 @@ jobs:
 
       - name: Install deps
         run: |
-          cd hdd_trajectory_app
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller
+          pip install -r hdd_trajectory_app/requirements.txt
+          pip install pyinstaller
 
       - name: Build EXE with PyInstaller
         working-directory: hdd_trajectory_app
+        shell: pwsh
         run: |
-          pyinstaller --noconsole --name "HDD Trajectory" app_launcher.py ^
-            --add-data "Home.py;." ^
-            --add-data "pages;pages" ^
-            --add-data "modules;modules" ^
-            --add-data ".streamlit;.streamlit" ^
+          pyinstaller --noconsole --name "HDD Trajectory" app_launcher.py `
+            --add-data "Home.py;." `
+            --add-data "pages;pages" `
+            --add-data "modules;modules" `
+            --add-data ".streamlit;.streamlit" `
             --runtime-hook rthooks\set_cwd.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: hdd-trajectory-exe
-          path: hdd_trajectory_app/dist/HDD Trajectory
+          path: |
+            hdd_trajectory_app/dist/HDD Trajectory/**
