@@ -1,0 +1,40 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          cd hdd_trajectory_app
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build EXE with PyInstaller
+        working-directory: hdd_trajectory_app
+        run: |
+          pyinstaller --noconsole --name "HDD Trajectory" app_launcher.py ^
+            --add-data "Home.py;." ^
+            --add-data "pages;pages" ^
+            --add-data "modules;modules" ^
+            --add-data ".streamlit;.streamlit" ^
+            --runtime-hook rthooks\set_cwd.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hdd-trajectory-exe
+          path: hdd_trajectory_app/dist/HDD Trajectory
