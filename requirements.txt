@@ -1,0 +1,9 @@
+streamlit>=1.37
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+reportlab>=4.1
+openpyxl>=3.1
+# Для профилей (опционально, если хочешь использовать welleng):
+# welleng>=0.4
+# scipy>=1.13

@@ -1,0 +1,10 @@
+[server]
+headless = true
+runOnSave = true
+
+[client]
+toolbarMode = "auto"
+
+[theme]
+base = "light"
+primaryColor = "#0b7dda"
